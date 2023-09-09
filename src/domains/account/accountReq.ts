@@ -1,14 +1,21 @@
-// accountService에서 사용할 예정
+// accountService
 
 // 유저 로그인
 export interface SignInReq {
-  email: String;
-  password: String;
+  email: string;
+  password: string;
+}
+
+// 유저 리스폰스
+export interface SignInRes {
+  email: string;
+  nickname: string;
 }
 
 // 유저 회원 가입
 export interface SignUpReq {
-  email: String;
-  nickName: String;
-  password: String;
+  email: string;
+  emailCode: string;
+  nickName: string;
+  password: string;
 }

@@ -5,15 +5,16 @@ import AccountHeader from "./AccountHeader";
 import AccountFooter from "./AccountFooter";
 import SignIn from "../../pages/account/SignIn";
 import SignUp from "../../pages/account/SignUp";
+import { useNavigatorContext } from "../common/NavigatorProvider";
 
 const Account = () => {
+  const navigator = useNavigatorContext();
+
   React.useEffect(() => {
-    const hasToken = localStorage.getItem('test');
-    if (hasToken === null) {
-      console.log('로그인이 안되있다고 가정');
-    } else {
-      console.log('로그인이 되어있다고 가정');
-      window.location.href = 'http://localhost:3000/';
+    const hasToken = sessionStorage.getItem('user');
+    if (hasToken !== null) {
+      alert('잘못된 접근!');
+      navigator('/board/');
     }
   }, []);
 
@@ -21,9 +22,9 @@ const Account = () => {
     <>
       <AccountHeader />
       <Routes>
-        <Route path="/" element={<Navigate to="/account/signin" replace />} />
-        <Route path="/signin" element={<SignIn />} />
-        <Route path="/signup" element={<SignUp />} />
+        <Route path="/" element={<Navigate to="/account/signIn" replace />} />
+        <Route path="/signIn" element={<SignIn />} />
+        <Route path="/signUp" element={<SignUp />} />
       </Routes>
       <AccountFooter />
     </>

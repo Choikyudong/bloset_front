@@ -1,5 +1,3 @@
-
-
 const BoardFooter = () => {
   return (
     <>

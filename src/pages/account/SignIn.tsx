@@ -1,81 +1,63 @@
-import { 
-  Box
-  , Typography
-  , Button
-  , Stack
-  , TextField
-} from "@mui/material";
-import { Link } from "react-router-dom";
-import {
- SignIn as login
-} from "../../service/account/accountService";
+import { ChangeEvent, useState } from 'react';
+import { useNavigatorContext } from '../../layout/common/NavigatorProvider';
+import { SignInReq } from '../../domains/account/accountReq';
+import { findUser } from '../../service/account/accountService';
 
 const SignIn = () => {
+  const navigator = useNavigatorContext();
+
+  const [signIn, setSignIn] = useState<SignInReq>({
+    email: '',
+    password: ''
+  });
+
+  const storeSignIn = (event: ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = event.target;
+    setSignIn({
+      ...signIn,
+      [id]: value
+    })
+  };
+
+  const doLogin = async () => {
+    const result = await findUser(signIn);
+    if (Array.isArray(result)) {
+      const [isSuccess, signInRes] = result;
+      if (isSuccess) {
+        alert('로그인 성공');
+        debugger;
+        localStorage.setItem('user', JSON.stringify(signInRes));
+        navigator('/board/');
+      } else {
+        alert('로그인 정보 다시 확인해주세요');
+      }
+    } else {
+      alert('로그인 요청 중에 문제가 발생했습니다.');
+    }
+  }
+
   return (
     <>
-      <Box
-        sx={{
-          backgroundColor: 'background.paper',
-          flex: '1 1 auto',
-          alignItems: 'center',
-          display: 'flex',
-          justifyContent: 'center'
-        }}
-      >
-        <Box
-          sx={{
-            maxWidth: 500,
-            px: 3,
-            py: '100px',
-            width: '100%'
-          }}
-        >
-          <Stack
-            spacing={1}
-            sx={{ mb: 3 }}
-          >
-            <Typography variant="h4">
-              Login
-            </Typography>
-          </Stack>
-          <Box component={"form"} onSubmit={login} noValidate>
-            <Stack spacing={2}>
-              <TextField
-                fullWidth
-                label="Email Address"
-                name="email"
-                type="email"
-                id="email"
-              />
-              <TextField
-                fullWidth
-                label="Password"
-                name="password"
-                type="password"
-                id="password"
-              />
-            </Stack>
-            <Typography
-              color="text.secondary"
-              variant="body1"
-            >
-              Don&apos;t have an account?
-              <Link to={'/account/signup'}>
-                SignUp
-              </Link>
-            </Typography>
-            <Button
-              fullWidth
-              size="large"
-              sx={{ mt: 3 }}
-              type="submit"
-              variant="contained"
-            >
-              Login
-            </Button>
-          </Box>
-        </Box>
-      </Box>
+      <h1>로그인 페이지</h1>
+      <strong>이메일&nbsp;</strong>
+      <input 
+        id="email"
+        type="email"
+        value={signIn.email}
+        placeholder='mail@example.com'
+        onChange={storeSignIn}
+      />
+      <br />
+      <strong>비밀번호&nbsp;</strong>
+      <input 
+        id="password"
+        type="password"
+        value={signIn.password}
+        onChange={storeSignIn}
+        maxLength={20}
+      />
+      <br/>
+      <button id='signUp' onClick={doLogin}>로그인</button>
     </>
   );
 }

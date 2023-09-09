@@ -1,18 +1,21 @@
-import { Route, Routes } from "react-router-dom";
-import BoardBody from "../../layout/board/BoardBody";
+import { Navigate, Route, Routes } from "react-router-dom";
 import BoardFooter from "../../layout/board/BoardFooter";
 import BoardHeader from "../../layout/board/BoardHeader";
-import Setting from "../../pages/board/Setting";
-import { Box } from "@mui/material";
+import BoardWrite from "../../pages/board/BoardWrite";
+import BoardMain from "../../pages/board/BoardMain";
 
 const Board = () => {
   return (
     <>
-      <Box sx={{ display: 'flex' }}>
       <BoardHeader />
-      <BoardBody />
-      {/* <BoardFooter /> */}
-      </Box>
+      <hr />
+      <Routes>
+        <Route path="/" element={<Navigate to="/board" />} />
+        <Route path="/board" element={<BoardMain />} />
+        <Route path="/board/write" element={<BoardWrite />} />
+      </Routes>
+      <hr />
+      <BoardFooter />
     </>
   );
 }

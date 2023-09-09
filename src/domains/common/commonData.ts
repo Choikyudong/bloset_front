@@ -1,4 +1,4 @@
-import { AxiosResData } from "../../utils/axios/domain/axiosOption";
+import { AxiosResData } from "../../utils/axios/axiosOption";
 
 export interface inputEventData {
   inputName: string;

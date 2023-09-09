@@ -1,156 +1,178 @@
 import { FormEvent } from "react";
-import { axoisApi } from "../../utils/axios/axiosApi";
-import { AxiosOption, AxiosResData } from "../../utils/axios/domain/axiosOption";
+import { AxiosOption, AxiosResData, HttpMethod } from "../../utils/axios/axiosOption";
 import { inputEventData } from "../../domains/common/commonData";
+import { axiosApi } from "../../utils/axios/axiosApi";
+import { SignInReq, SignInRes, SignUpReq } from "../../domains/account/accountReq";
 
 // 이메일 유효성
-export const validEmail = (data: inputEventData): boolean => {
-  const emailRegex: RegExp = new RegExp("([!#-'*+/-9=?A-Z^-~-]+(\.[!#-'*+/-9=?A-Z^-~-]+)*|\"\(\[\]!#-[^-~ \t]|(\\[\t -~]))+\")@([!#-'*+/-9=?A-Z^-~-]+(\.[!#-'*+/-9=?A-Z^-~-]+)*|\[[\t -Z^-~]*])");
-  const valueAsString: string = String(data.value);
-  
-  if (emailRegex.test(valueAsString)) {
-    const option: AxiosOption = {
-      url: `signUp/findDuplicateEmail`,
-      data :{
-        params: {
-          email: valueAsString
-        }
-      }
-    }
+export const validEmail = (email: string): Promise<boolean> => {
+  const emailRegex = /^(?=.{0,255}$)[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
 
-    axoisApi.GET(option)
-    .then((response) => {
-      const isDupliEmail:boolean = response?.data === 0;
-      const result: AxiosResData = {
-        status: response?.status,
-        data: {
-          isLoding: false,
-          callName: data.inputName,
-          data: {
-            isValid: isDupliEmail
+  return new Promise<boolean>((resolve) => {
+    if (emailRegex.test(email)) {
+      const option: AxiosOption = {
+        method: HttpMethod.GET,
+        url: `signUp/findDuplicateEmail`,
+        data :{
+          params: {
+            email: email
           }
         }
       }
-      
-      if (data.callback) {
-        data.callback(result);
-      }
-    })
-    .catch(() => {
-      console.log('에러발생');
-    });
-  }
-
-  return false;
+  
+      axiosApi(option)
+      .then((response) => {
+        if (response?.status === 200 && response.data === 0) {
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      })
+      .catch((error) => {
+        alert('에러발생 ㅜ');
+        console.log(error);
+      });
+    } else {
+      alert('이메일 형식은 mail@mail.com 식으로 해주세요');
+      resolve(false);
+    }
+  });
 }
 
 // 이메일 인증발송
-export const sendEmailValid = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>, eventData: any) => {
-  const data = {
-    email: eventData.email
-  }
-  const option: AxiosOption = {
-    url: `signUp/sendVarificationEmail`,
-    data: data
-  }
-  axoisApi.POST(option)
-  .then((response) => {
-    if (response?.status === 200) {
-      alert('인증성공!');
-    }
-
-    const result: AxiosResData = {
-      status: response?.status,
-      data: {
-        isLoding: false,
-        callName: eventData.callName
+export const sendEmail = (email: string): Promise<boolean> => {
+  return new Promise<boolean>((resolve) => {
+      const option: AxiosOption = {
+        method: HttpMethod.POST,
+        url: `signUp/sendVarificationEmail`,
+        data :{
+          email: email
+        }
       }
-    }
-    if (eventData.callBackValidInput) {
-      eventData.callBackValidInput(result);
-    }
-  })
-  .catch(() => {
-    console.log('!!!!!!'); // 잉 에러 경고창..
+  
+      axiosApi(option)
+      .then((response) => {
+        if (response?.status === 200) {
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      })
+      .catch((error) => {
+        alert('에러발생 ㅜ');
+        console.log(error);
+      });
   });
 }
 
 // 닉네임 유효성
-export const validNickName = (data: inputEventData): boolean => {
-  const nickName = String(data.value);
-  const option: AxiosOption = {
-    url: 'signUp/findDuplicateNickName',
-    data :{
-      params: {
-        nickname: nickName
-      }
-    }
-  }
-  axoisApi.GET(option)
-  .then((response) => {
-    const isDupliNickName:boolean = response?.data.nickname === nickName    
-
-    const result: AxiosResData = {
-      status: response?.status,
-      data: {
-        isLoding: false,
-        callName: data.inputName,
-        data: {
-          isValid: isDupliNickName
+export const validNickName = (nickName: string): Promise<[boolean, string]> => {
+  return new Promise<[boolean, string]>((resolve) => {
+    const option: AxiosOption = {
+      method: HttpMethod.GET,
+      url: `signUp/findDuplicateNickName`,
+      data :{
+        params: {
+          nickname: nickName
         }
       }
     }
-    if (data.callback) {
-      data.callback(result);
+
+    interface nickNameRes {
+      nickname: string;
     }
-  })
-  .catch(() => {
-    console.log('!!')
+
+    axiosApi(option)
+    .then((response) => {
+      const nickNameRes = response?.data as nickNameRes;
+      const isPossibleName = nickNameRes.nickname === nickName;
+      if (response?.status === 200 && isPossibleName) {
+        resolve([true, nickName]);
+      } else {
+        resolve([false, nickNameRes.nickname]);
+      }
+    })
+    .catch((error) => {
+      alert('에러발생 ㅜ');
+      console.log(error);
+    });
   });
-  return false;
 }
 
 // 유저 회원가입
-export const SignUp = (event: FormEvent<HTMLFormElement>) => {
-  event.preventDefault();
-  const data = new FormData(event.currentTarget);
-  const option: AxiosOption = {
-    url: 'signUp/saveUser',
-    data: {
-      email: data.get('email') as string,
-      nickName: data.get('nickName') as string,
-      password: data.get('password') as string,
-      emailAuthCode: data.get('emailAuthCode') as string
+export const saveUser = (signUp: SignUpReq): Promise<boolean> => {
+  return new Promise<boolean>((resolve) => {
+    const option: AxiosOption = {
+      method: HttpMethod.POST,
+      url: `signUp/saveUser`,
+      data :{
+        email: signUp.email,
+        emailAuthCode: signUp.emailCode,
+        nickName: signUp.nickName,
+        password: signUp.password
+      }
     }
-  }
-  axoisApi.POST(option)
-  .then(() => {
-    alert('회원가입 축하');
-    window.location.href = 'http://localhost:3000/account/signin';
-  })
-  .catch(() => {
-    console.log('실패');
+
+    axiosApi(option)
+    .then((response) => {
+      if (response?.status === 200) {
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    })
+    .catch((error) => {
+      alert('에러발생 ㅜ');
+      console.log(error);
+    });
   });
 }
 
 // 유저 로그인
-export const SignIn = (event: FormEvent<HTMLFormElement>) => {
-  event.preventDefault();
-  const data = new FormData(event.currentTarget);
-  const option: AxiosOption = {
-    url: 'login/findUser',
-    data: {
-      email: data.get('email') as string,
-      password: data.get('password') as string,
+export const findUser = (signIn: SignInReq): Promise<[boolean, SignInRes] | boolean> => {
+  return new Promise<[boolean, SignInRes] | boolean>((resolve) => {
+    const option: AxiosOption = {
+      method: HttpMethod.POST,
+      url: 'login/findUser',
+      data: {
+        email: signIn.email,
+        password: signIn.password
+      }
     }
-  }
-  axoisApi.POST(option)
-  .then((response) => {
-    console.log("로그인성공!");
-    localStorage.setItem('test', 'test');
-    window.location.href = 'http://localhost:3000/';
-  })
-  .catch((error) => {
-    console.log('에러발생');
+    axiosApi(option)
+    .then((response) => {
+      if (response?.status === 200) {
+        const signInRes: SignInRes = response.data as SignInRes;
+        resolve([true, signInRes]);
+      } else {
+        resolve(false);
+      }
+    })
+    .catch((error) => {
+      alert('에러발생');
+      console.log(error);
+    });
+  });
+}
+
+// 로그아웃
+export const actionlogOut = (): Promise<boolean> => {
+  return new Promise<boolean>((resolve) => {
+    const option: AxiosOption = {
+      method: HttpMethod.POST,
+      url: 'login/logoutUser'
+    }
+    axiosApi(option)
+    .then((response) => {
+      if (response?.status === 200) {
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    })
+    .catch((error) => {
+      alert('에러발생');
+      console.log(error);
+    });
   });
 }
