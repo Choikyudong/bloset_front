@@ -1,12 +1,12 @@
-import { FormEvent } from "react";
-import { AxiosOption, AxiosResData, HttpMethod } from "../../utils/axios/axiosOption";
-import { inputEventData } from "../../domains/common/commonData";
+import { AxiosOption, HttpMethod } from "../../utils/axios/axiosOption";
 import { axiosApi } from "../../utils/axios/axiosApi";
 import { SignInReq, SignInRes, SignUpReq } from "../../domains/account/accountReq";
+import { CommonRegex } from "../common/commonConstant";
+import { ChangeMyInfo } from "../../domains/board/mainPost";
 
 // 이메일 유효성
 export const validEmail = (email: string): Promise<boolean> => {
-  const emailRegex = /^(?=.{0,255}$)[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
+  const emailRegex = new RegExp(CommonRegex.EmailRg);
 
   return new Promise<boolean>((resolve) => {
     if (emailRegex.test(email)) {
@@ -169,6 +169,28 @@ export const actionlogOut = (): Promise<boolean> => {
       } else {
         resolve(false);
       }
+    })
+    .catch((error) => {
+      alert('에러발생');
+      console.log(error);
+    });
+  });
+}
+
+// 유저 로그인
+export const updateMyInfo = (myInfo: ChangeMyInfo): Promise<[boolean, SignInRes] | boolean> => {
+  return new Promise<boolean>((resolve) => {
+    const option: AxiosOption = {
+      method: HttpMethod.PUT,
+      url: 'login/updateUser',
+      data: {
+        nickname: myInfo.nickName,
+        password: myInfo.password
+      }
+    }
+    axiosApi(option)
+    .then((response) => {
+      resolve(true);
     })
     .catch((error) => {
       alert('에러발생');

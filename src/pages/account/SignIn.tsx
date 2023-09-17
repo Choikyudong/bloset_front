@@ -25,7 +25,6 @@ const SignIn = () => {
       const [isSuccess, signInRes] = result;
       if (isSuccess) {
         alert('로그인 성공');
-        debugger;
         localStorage.setItem('user', JSON.stringify(signInRes));
         navigator('/board/');
       } else {
@@ -34,6 +33,10 @@ const SignIn = () => {
     } else {
       alert('로그인 요청 중에 문제가 발생했습니다.');
     }
+  }
+
+  const doSignUp = async () => {
+    navigator('/account/signup');
   }
 
   return (
@@ -57,7 +60,8 @@ const SignIn = () => {
         maxLength={20}
       />
       <br/>
-      <button id='signUp' onClick={doLogin}>로그인</button>
+      <button onClick={doLogin}>로그인</button>
+      <button onClick={doSignUp}>회원가입</button>
     </>
   );
 }

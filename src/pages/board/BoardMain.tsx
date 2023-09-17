@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Post } from '../../domains/board/mainPost';
+import { LoginProps, Post } from '../../domains/board/mainPost';
 import { selectPostList } from '../../service/board/boardService';
 import { useNavigatorContext } from '../../layout/common/NavigatorProvider';
 
-const BoardMain = () => {
+const BoardMain: React.FC<LoginProps> = ({ isLogin }) => {
   const navigator = useNavigatorContext();
   const [posts, setPosts] = useState<Post[]>([]);
+  const [loginStatus, setLoginStatus] = useState<boolean>(isLogin);
   
   useEffect(() => {
     selectPostList()
@@ -39,7 +40,10 @@ const BoardMain = () => {
   return (
     <>
       <h1>메인페이지</h1>
-      <button onClick={() => moveToPage("/board/write")}>글작성</button>
+      {
+        isLogin ? <button onClick={() => moveToPage("/board/write")}>글작성</button>
+        : <></>
+      }
       {renderList()}
     </>
   );

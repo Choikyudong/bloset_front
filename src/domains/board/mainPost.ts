@@ -6,3 +6,12 @@ export interface Post {
   thumbnailImg: string;
   regDt: string;
 }
+
+export interface LoginProps {
+  isLogin : boolean;
+}
+
+export interface ChangeMyInfo {
+  nickName : string;
+  password : string;
+}

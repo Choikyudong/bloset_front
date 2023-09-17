@@ -2,6 +2,7 @@ import React, { ChangeEvent, useState, KeyboardEvent, MouseEvent } from 'react';
 import { SignUpReq } from "../../domains/account/accountReq";
 import { saveUser, sendEmail, validEmail, validNickName } from '../../service/account/accountService';
 import { useNavigatorContext } from '../../layout/common/NavigatorProvider';
+import { CommonRegex } from '../../service/common/commonConstant';
 
 enum InputId {
   EMAIL = 'email'
@@ -14,6 +15,7 @@ enum EventType {
   CHECK_EMAIL = 'checkEmail'
   , SEND_EMAIL = 'sendEmail'
   , NICK_NAME_CHECK = 'nickName'
+  , ChANGE_NICK_NAME = 'changeNickName'
   , PASSWORD_VALID = 'password'
   , PASSWORD_CHECK = 'password_check'
   , SignUP = 'signUp'
@@ -31,6 +33,7 @@ const SignUp = () => {
 
   const [isValidEmail, setIsValidEmail] = useState<boolean>(false);
   const [isSendEmail, setIsSendEmail] = useState<boolean>(false);
+  const [isSendDisabled, setIsSendDisabled] = useState<boolean>(false);
   const [isInputEmailCode, setIsInputEmailCode] = useState<boolean>(false);
 
   const [isInputNickName, setIsInputNickName] = useState<boolean>(false);
@@ -74,6 +77,7 @@ const SignUp = () => {
     if (EventType.PASSWORD_VALID === eventType) {
       if (signUp.password.length === 0) {
         setIsInputPasword(false);
+        setIsValidPassword(false);
         setPasswordMsg('');
         return;
       }
@@ -82,14 +86,14 @@ const SignUp = () => {
         setPasswordMsg('비밀번호가 너무 짧아요 ㅜㅜ');
         return;
       }
-      const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-={}|;:'",.<>/?]).{8,20}$/;
-      if (passwordPattern.test(signUp.password)) {
-        setIsValidPassword(true);
-        setPasswordMsg('사용가능~');
-      } else {
+      const passwordPattern = new RegExp(CommonRegex.PwdReg);
+      if (!passwordPattern.test(signUp.password)) {
         setIsValidPassword(false);
-        setPasswordMsg('제대로 입력해주세요~~');
+        setPasswordMsg('제대로 입력해주세요~~');  
+        return;
       }
+      setIsValidPassword(true);
+      setPasswordMsg('사용가능~');
     }
     if (EventType.PASSWORD_CHECK === eventType) {
       if (checkPassword.length === 0) {
@@ -113,7 +117,7 @@ const SignUp = () => {
         setIsInputNickName(false);
         return;
       }
-      const nickNamePattern =  /^[a-zA-Z0-9가-힣]{2,20}$/;
+      const nickNamePattern = new RegExp(CommonRegex.NickReg);
       if (!nickNamePattern.test(signUp.nickName) || signUp.nickName.length === 1) {
         alert('이상하게 입력 금지!');
         setRecommendNickName('');
@@ -134,16 +138,22 @@ const SignUp = () => {
     if (EventType.CHECK_EMAIL === eventType) {
       if (signUp.email === '') {
         alert('빈값이에요!');
+        setIsValidEmail(false);
+        setIsSendEmail(false);
         return;
       }
-      const emailRegex = /^(?=.{0,255}$)[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
-      if (!emailRegex.test(signUp.email)) {
-        alert('이메일을 다시 입력해주세요!');
+      const emailRegex = new RegExp(CommonRegex.EmailRg);
+      if (!emailRegex.exec(signUp.email)) {
+        alert('이메일을 형식에 맞춰 입력해주세요!');
+        setIsValidEmail(false);
+        setIsSendEmail(false);
         return;
       }
       const haveEmail = await validEmail(signUp.email);
       if (!haveEmail) {
         alert('이미 존재함~');
+        setIsValidEmail(haveEmail);
+        setIsSendEmail(false);
         return;
       }
       alert('해당 이메일은 사용가능!');
@@ -151,17 +161,36 @@ const SignUp = () => {
     }
 
     if (EventType.SEND_EMAIL === eventType) {
+      if (isSendDisabled) {
+        alert('발송버튼 고장으로 페이지를 새로고침 해주세요');
+        return;
+      }
       if (signUp.email === '') {
         alert('이메일이 왜 빈칸일까요? 다시 확인해주세요!');
         return;
       }
+      setIsSendDisabled(true);
       const isSend = await sendEmail(signUp.email);
+      setIsSendDisabled(false);
       if (!isSend) {
         alert('메일이 안날라감 ㅜ');
         return;
       }
       alert('이메일 인증 코드를 밑의 칸에 입력해주세요!!');
       setIsSendEmail(isSend);
+    }
+
+    if (EventType.ChANGE_NICK_NAME === eventType) {
+      const isChange:boolean = window.confirm('추천한 닉네임으로 변경?');
+      if (isChange) {
+        setSignUp({
+          ...signUp,
+          nickName: recommendNickName
+        });
+        alert('변경함~');
+        setRecommendNickName('');
+        setHasNickName(true);
+      }
     }
 
     if (EventType.SignUP === eventType) {
@@ -226,7 +255,7 @@ const SignUp = () => {
       &nbsp;<button id='checkEmail' onClick={handleClick}>이메일확인</button>
       {isValidEmail ? 
         <>
-          &nbsp;<button id='sendEmail' onClick={handleClick}>이메일발송</button>
+          &nbsp;<button id='sendEmail' onClick={handleClick} disabled={isSendDisabled}>이메일발송</button>
         </>
         :<></>
       }
@@ -257,7 +286,10 @@ const SignUp = () => {
       />
       {isInputNickName ?
         hasNickName ? 
-        <strong>사용가능!</strong> : <strong>이미존재함! 추천 : {recommendNickName}</strong>
+        <strong>사용가능!</strong> : 
+          <strong>이미존재함! 추천 : 
+            <span id='changeNickName' onClick={handleClick}>{recommendNickName}</span>
+          </strong>
         : <></>
       }
       <br/>
