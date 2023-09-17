@@ -14,12 +14,22 @@ const BoardMain: React.FC<LoginProps> = ({ isLogin }) => {
       setPosts(data);
     })
     .catch((error) => {
-      alert("에러 ㅜ");
       console.log(error);
     });
   }, []);
 
   function renderList() {
+    if (posts === undefined || posts === null) {
+      navigator('/error');
+      return;
+    }
+    if (posts.length === 0) {
+      return (
+        <>
+          <h1>게시글이 없어요~~</h1>
+        </>
+      );
+    }
     return posts.map((item, index) => (
       <div key={index}>
         <h2>{item.title}</h2>

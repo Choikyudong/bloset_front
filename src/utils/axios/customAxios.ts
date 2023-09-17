@@ -29,10 +29,10 @@ customAxios.interceptors.request.use(
  */
 customAxios.interceptors.response.use(
     response => {
-        return response;
+      return response;
     },
     error => {
-        return Promise.reject(error);
+      return Promise.reject(error);
     }
 );
 
